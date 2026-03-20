@@ -10,33 +10,24 @@ class Splashscreen extends StatefulWidget {
 }
 
 class _SplashscreenState extends State<Splashscreen> {
-
   @override
   void initState() {
     super.initState();
 
-    Timer(
-      const Duration(seconds: 3),
-          () => Navigator.pushReplacement(
+    Timer(const Duration(seconds: 3), () {
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const Signinscreen(),
-        ),
-      ),
-    );
+        MaterialPageRoute(builder: (context) => Signinscreen()),
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF6FB),
+      backgroundColor: Colors.white,
       body: Center(
-        child: Image.asset(
-          "assets/splash.png", 
-          width: 200,
-          height: 200,
-          fit: BoxFit.contain,
-        ),
+        child: Image.asset("assets/img_2.png", width: 500, fit: BoxFit.contain),
       ),
     );
   }
