@@ -18,9 +18,8 @@ class _SigninscreenState extends State<Signinscreen> {
   bool isLoading = false;
 
   void showMsg(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   void login() async {
@@ -47,10 +46,11 @@ class _SigninscreenState extends State<Signinscreen> {
     var url = Uri.parse("https://prakrutitech.xyz/jiya/admin_login.php");
 
     try {
-      var resp = await http.post(url, body: {
-        "email": userEmail,
-        "password": userPass,
-      }).timeout(const Duration(seconds: 10));
+      var resp = await http
+          .post(url, body: {"email": userEmail, "password": userPass})
+          .timeout(const Duration(seconds: 10));
+
+      if (!mounted) return;
 
       if (resp.statusCode == 200) {
         String response = resp.body.trim();
@@ -60,30 +60,32 @@ class _SigninscreenState extends State<Signinscreen> {
 
           showMsg("Welcome $username");
 
-          Future.delayed(const Duration(milliseconds: 500), () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => HomeScreen(
-                  email: userEmail,
-                  username: username,
-                ),
-              ),
-            );
-          });
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          if (!mounted) return;
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  DashboardScreen(email: userEmail, username: username),
+            ),
+          );
         } else {
           showMsg("Invalid Email or Password");
         }
       } else {
-        showMsg("Server Error");
+        showMsg("Server Error: ${resp.statusCode}");
       }
     } on TimeoutException {
       showMsg("Server Timeout");
     } catch (e) {
       showMsg("Something went wrong");
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
-
-    setState(() => isLoading = false);
   }
 
   @override
@@ -100,19 +102,12 @@ class _SigninscreenState extends State<Signinscreen> {
       child: Scaffold(
         body: Stack(
           children: [
-
-            /// BACKGROUND
             SizedBox.expand(
-              child: Image.asset(
-                "assets/hotel_bg.png",
-                fit: BoxFit.cover,
-              ),
+              child: Image.asset("assets/hotel_bg.png", fit: BoxFit.cover),
             ),
 
-            /// DARK OVERLAY
             Container(color: Colors.black.withOpacity(0.5)),
 
-            /// MAIN UI
             SafeArea(
               child: Center(
                 child: SingleChildScrollView(
@@ -121,15 +116,11 @@ class _SigninscreenState extends State<Signinscreen> {
                     clipBehavior: Clip.none,
                     alignment: Alignment.center,
                     children: [
-
-                      /// 🔥 GLASS CARD (NO BLUR = NO LINE)
                       Container(
                         margin: const EdgeInsets.only(top: 50),
                         padding: const EdgeInsets.fromLTRB(25, 80, 25, 25),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(25),
-
-                          /// Fake glass look
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -138,27 +129,22 @@ class _SigninscreenState extends State<Signinscreen> {
                               Colors.white.withOpacity(0.05),
                             ],
                           ),
-
-                          /// Border glow
                           border: Border.all(
                             color: Colors.white.withOpacity(0.25),
                             width: 1,
                           ),
-
-                          /// Soft shadow
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
-                            )
+                            ),
                           ],
                         ),
 
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-
                             const Text(
                               "Admin Login!",
                               style: TextStyle(
@@ -170,14 +156,18 @@ class _SigninscreenState extends State<Signinscreen> {
 
                             const SizedBox(height: 25),
 
-                            /// EMAIL
                             TextField(
                               controller: email,
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 hintText: "Enter Gmail",
-                                hintStyle: const TextStyle(color: Colors.white60),
-                                prefixIcon: const Icon(Icons.email, color: Colors.white),
+                                hintStyle: const TextStyle(
+                                  color: Colors.white60,
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.email,
+                                  color: Colors.white,
+                                ),
                                 filled: true,
                                 fillColor: Colors.white.withOpacity(0.08),
                                 border: OutlineInputBorder(
@@ -189,15 +179,19 @@ class _SigninscreenState extends State<Signinscreen> {
 
                             const SizedBox(height: 15),
 
-                            /// PASSWORD
                             TextField(
                               controller: password,
                               obscureText: !isPasswordVisible,
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 hintText: "Enter Password",
-                                hintStyle: const TextStyle(color: Colors.white60),
-                                prefixIcon: const Icon(Icons.lock, color: Colors.white),
+                                hintStyle: const TextStyle(
+                                  color: Colors.white60,
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.lock,
+                                  color: Colors.white,
+                                ),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     isPasswordVisible
@@ -222,12 +216,13 @@ class _SigninscreenState extends State<Signinscreen> {
 
                             const SizedBox(height: 25),
 
-                            /// BUTTON
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 15),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 15,
+                                  ),
                                   backgroundColor: Colors.orangeAccent,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(15),
@@ -235,18 +230,22 @@ class _SigninscreenState extends State<Signinscreen> {
                                 ),
                                 onPressed: isLoading ? null : login,
                                 child: isLoading
-                                    ? const CircularProgressIndicator(color: Colors.white)
+                                    ? const CircularProgressIndicator(
+                                        color: Colors.white,
+                                      )
                                     : const Text(
-                                  "LOGIN",
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,),
-                                ),
+                                        "LOGIN",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                               ),
                             ),
                           ],
                         ),
                       ),
 
-                      /// ICON
                       Positioned(
                         top: 5,
                         child: Container(
@@ -263,7 +262,11 @@ class _SigninscreenState extends State<Signinscreen> {
                           child: const CircleAvatar(
                             radius: 40,
                             backgroundColor: Colors.orange,
-                            child: Icon(Icons.apartment, size: 40, color: Colors.white),
+                            child: Icon(
+                              Icons.apartment,
+                              size: 40,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
