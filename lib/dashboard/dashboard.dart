@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hotel_booking_admin/dashboard/admin_hotel_details_screen.dart';
 import '../drawer/app_drawer.dart';
 import '../services/api_service.dart';
 import '../model/dashboard_model.dart';
@@ -59,10 +60,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
+
       appBar: AppBar(
         title: const Text("Dashboard"),
-        centerTitle: true,
-
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: loadData),
         ],
@@ -82,11 +86,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Welcome @${widget.username}",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                    // WELCOME CARD
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.person, color: Colors.blue),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Hello!",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Text(
+                                  widget.username,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
@@ -114,7 +160,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           title: "Total Hotels",
                           value: dashboardData!.totalHotels.toString(),
                           icon: Icons.hotel,
-                          color: Colors.blue.shade700,
+                          color: Colors.blue,
                         ),
                         dashboardCard(
                           title: "Total Rooms",
@@ -126,13 +172,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           title: "New Bookings",
                           value: dashboardData!.newBookings.toString(),
                           icon: Icons.calendar_month,
-                          color: Colors.green.shade700,
+                          color: Colors.green,
                         ),
                         dashboardCard(
                           title: "Earnings",
                           value: "₹${dashboardData!.earnings}",
                           icon: Icons.currency_rupee,
-                          color: Colors.orange.shade800,
+                          color: Colors.orange,
                         ),
                       ],
                     ),
@@ -150,32 +196,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 10),
 
                     SizedBox(
-                      height: 210,
+                      height: 220,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         itemCount: hotels.length,
                         itemBuilder: (context, index) {
                           final hotel = hotels[index];
                           final imageUrl = getHotelImage(hotel.id);
-
                           double rating =
                               double.tryParse(hotel.rating ?? "0") ?? 0;
 
                           return GestureDetector(
                             onTap: () {
-                              print("Tapped: ${hotel.name}");
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      HotelDetailScreen(hotelId: hotel.id),
+                                ),
+                              );
                             },
                             child: Container(
                               width: 230,
                               margin: const EdgeInsets.only(right: 14),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(18),
                                 color: Colors.white,
-                                boxShadow: const [
+                                boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 6,
-                                    spreadRadius: 2,
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 10,
                                   ),
                                 ],
                               ),
@@ -184,8 +234,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   ClipRRect(
                                     borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(16),
-                                      topRight: Radius.circular(16),
+                                      topLeft: Radius.circular(18),
+                                      topRight: Radius.circular(18),
                                     ),
                                     child: imageUrl.isNotEmpty
                                         ? Image.network(
@@ -196,12 +246,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           )
                                         : Container(
                                             height: 130,
-                                            width: double.infinity,
                                             color: Colors.grey.shade300,
                                             child: const Icon(Icons.image),
                                           ),
                                   ),
-
                                   Padding(
                                     padding: const EdgeInsets.all(10),
                                     child: Column(
@@ -213,45 +261,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            ...List.generate(5, (i) {
-                                              if (i < rating.floor()) {
-                                                return const Icon(
-                                                  Icons.star,
-                                                  color: Colors.orange,
-                                                  size: 16,
-                                                );
-                                              } else if (i < rating &&
-                                                  rating % 1 != 0) {
-                                                return const Icon(
-                                                  Icons.star_half,
-                                                  color: Colors.orange,
-                                                  size: 16,
-                                                );
-                                              } else {
-                                                return const Icon(
-                                                  Icons.star_border,
-                                                  color: Colors.orange,
-                                                  size: 16,
-                                                );
-                                              }
-                                            }),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              rating.toString(),
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                        const SizedBox(height: 6),
+                                        Text("⭐ ${rating.toString()}"),
                                       ],
                                     ),
                                   ),
@@ -297,32 +312,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           itemBuilder: (context, index) {
                             final booking = bookings[index];
 
-                            String status = booking.status.toLowerCase();
-
-                            Color statusColor;
-                            String statusText;
-
-                            if (status == "success") {
-                              statusColor = Colors.green;
-                              statusText = "Success";
-                            } else if (status == "cancelled") {
-                              statusColor = Colors.red;
-                              statusText = "Cancelled";
-                            } else {
-                              statusColor = Colors.orange;
-                              statusText = "Pending";
-                            }
+                            bool isPaid = booking.paymentStatus == 1;
 
                             return Container(
                               margin: const EdgeInsets.only(bottom: 12),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(16),
                                 color: Colors.white,
-                                boxShadow: const [
+                                boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 5,
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 8,
                                   ),
                                 ],
                               ),
@@ -336,58 +337,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-
                                   const SizedBox(height: 6),
-
-                                  Text(
-                                    "User: ${booking.userName}",
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-
+                                  Text("User: ${booking.userName}"),
                                   const SizedBox(height: 6),
-
                                   Text(
                                     "${booking.checkIn} → ${booking.checkOut}",
                                     style: const TextStyle(
                                       fontSize: 12,
-                                      color: Colors.black54,
+                                      color: Colors.grey,
                                     ),
                                   ),
-
                                   const SizedBox(height: 6),
-
                                   Text(
                                     "₹${booking.amount}",
                                     style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.bold,
                                       color: Colors.green,
                                     ),
                                   ),
+                                  const SizedBox(height: 8),
 
-                                  const SizedBox(height: 6),
-
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: BoxDecoration(
-                                          color: statusColor,
-                                          shape: BoxShape.circle,
-                                        ),
+                                  if (isPaid)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
                                       ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        statusText,
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: const Text(
+                                        "Paid",
                                         style: TextStyle(
-                                          fontSize: 12,
+                                          color: Colors.green,
                                           fontWeight: FontWeight.w600,
-                                          color: statusColor,
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                    ),
                                 ],
                               ),
                             );
@@ -409,41 +396,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required Color color,
   }) {
     return Container(
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: color.withOpacity(0.12),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+        ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: Colors.white, size: 18),
-          ),
+          Icon(icon, color: color),
           const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
-                ),
-              ],
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(title),
+            ],
           ),
         ],
       ),

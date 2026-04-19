@@ -8,6 +8,8 @@ class RoomModel {
   final String description;
   final String roomStatus;
 
+  final List<String> images;
+
   RoomModel({
     required this.id,
     required this.hotelId,
@@ -17,18 +19,21 @@ class RoomModel {
     required this.availableRooms,
     required this.description,
     required this.roomStatus,
+    required this.images,
   });
 
   factory RoomModel.fromJson(Map<String, dynamic> json) {
     return RoomModel(
-      id: json['id'],
-      hotelId: json['hotel_id'],
-      roomType: json['room_type'],
-      price: json['price'],
-      totalRooms: json['total_rooms'],
-      availableRooms: json['available_rooms'],
-      description: json['description'],
-      roomStatus: json['room_status'],
+      id: json['id'].toString(),
+      hotelId: json['hotel_id'].toString(),
+      roomType: json['room_type'] ?? '',
+      price: json['price'].toString(),
+      totalRooms: json['total_rooms'].toString(),
+      availableRooms: json['available_rooms'].toString(),
+      description: json['description'] ?? '',
+      roomStatus: json['room_status'] ?? '',
+
+      images: [],
     );
   }
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hotel_booking_admin/model/image_model.dart';
 import 'package:hotel_booking_admin/model/room_model.dart';
+import 'package:hotel_booking_admin/screens/manage_hotels/tabs/fullscreen_gallary.dart';
+import 'package:hotel_booking_admin/screens/manage_hotels/tabs/room_services_screen.dart';
 import 'package:hotel_booking_admin/services/api_service.dart';
 
 class RoomsTab extends StatefulWidget {
@@ -13,88 +16,137 @@ class RoomsTab extends StatefulWidget {
 
 class _RoomsTabState extends State<RoomsTab> {
   List<RoomModel> rooms = [];
+  List<RoomImageModel> images = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchRooms();
+    fetchData();
   }
 
-  Future<void> fetchRooms() async {
-    print("📌 HOTEL ID RECEIVED: ${widget.hotelId}");
+  Future<void> fetchData() async {
+    setState(() => isLoading = true);
 
-    try {
-      final data = await ApiService.getRoomCategories(widget.hotelId);
+    final roomData = await ApiService.getRoomCategories(widget.hotelId);
+    final imageData = await ApiService.getRoomImages();
 
-      print(" TOTAL ROOMS FROM API: ${data.length}");
+    final filteredRooms = roomData
+        .where((r) => r.hotelId.toString() == widget.hotelId.toString())
+        .toList();
 
-      final filteredRooms = data
-          .where((room) => room.hotelId == widget.hotelId)
-          .toList();
+    setState(() {
+      rooms = filteredRooms;
+      images = imageData;
+      isLoading = false;
+    });
+  }
 
-      print("FILTERED ROOMS: ${filteredRooms.length}");
+  List<String> getImages(String roomId) {
+    return images
+        .where((e) => e.roomCategoryId.toString() == roomId.toString())
+        .map((e) => e.image)
+        .toList();
+  }
 
-      setState(() {
-        rooms = filteredRooms;
-        isLoading = false;
-      });
-    } catch (e) {
-      print(" ERROR: $e");
-      setState(() {
-        isLoading = false;
-      });
+  Future<String?> getRealRoomId(String categoryId) async {
+    final allRooms = await ApiService.getRooms();
+
+    final filtered = allRooms
+        .where(
+          (r) =>
+              r['room_category_id'].toString().trim() ==
+              categoryId.toString().trim(),
+        )
+        .toList();
+
+    if (filtered.isNotEmpty) {
+      return filtered.first['id'].toString();
     }
+
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    return Scaffold(
+      appBar: AppBar(title: const Text("Rooms")),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : rooms.isEmpty
+          ? const Center(child: Text("No Rooms Found"))
+          : ListView.builder(
+              itemCount: rooms.length,
+              itemBuilder: (context, index) {
+                final room = rooms[index];
+                final imageList = getImages(room.id);
 
-    if (rooms.isEmpty) {
-      return const Center(
-        child: Text(
-          "No Rooms Available for this Hotel 🏨",
-          style: TextStyle(fontSize: 16),
-        ),
-      );
-    }
+                return Card(
+                  margin: const EdgeInsets.all(10),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 160,
+                        width: double.infinity,
+                        child: imageList.isEmpty
+                            ? const Center(child: Icon(Icons.image))
+                            : PageView.builder(
+                                itemCount: imageList.length,
+                                itemBuilder: (context, i) {
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => FullScreenGallery(
+                                            images: imageList,
+                                            initialIndex: i,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Image.network(
+                                      imageList[i],
+                                      fit: BoxFit.cover,
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                      ListTile(
+                        title: Text(room.roomType),
+                        subtitle: Text("₹${room.price}"),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.miscellaneous_services),
+                          onPressed: () async {
+                            final realRoomId = await getRealRoomId(room.id);
 
-    return ListView.builder(
-      itemCount: rooms.length,
-      itemBuilder: (context, index) {
-        final room = rooms[index];
+                            if (realRoomId == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("No actual rooms found"),
+                                ),
+                              );
+                              return;
+                            }
 
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 2,
-          child: ListTile(
-            title: Text(
-              room.roomType.toUpperCase(),
-              style: const TextStyle(fontWeight: FontWeight.bold),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => RoomServiceScreen(
+                                  roomId: realRoomId,
+                                  roomType: room.roomType,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            subtitle: Text(
-              "₹${room.price} | Available: ${room.availableRooms}",
-            ),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: room.roomStatus == "1" ? Colors.green : Colors.red,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                room.roomStatus == "1" ? "Active" : "Inactive",
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

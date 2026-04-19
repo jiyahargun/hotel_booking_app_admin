@@ -4,7 +4,8 @@ class RecentBookingModel {
   final String checkIn;
   final String checkOut;
   final String amount;
-  final String status;
+
+  final int paymentStatus;
 
   RecentBookingModel({
     required this.hotelName,
@@ -12,7 +13,7 @@ class RecentBookingModel {
     required this.checkIn,
     required this.checkOut,
     required this.amount,
-    required this.status,
+    required this.paymentStatus,
   });
 
   factory RecentBookingModel.fromJson(Map<String, dynamic> json) {
@@ -21,8 +22,9 @@ class RecentBookingModel {
       userName: json['user_name'] ?? "",
       checkIn: json['check_in'] ?? "",
       checkOut: json['check_out'] ?? "",
-      amount: json['amount'] ?? "",
-      status: json['status'] ?? "",
+      amount: json['total_price'] ?? "",
+
+      paymentStatus: int.tryParse(json['payment_status'].toString()) ?? 0,
     );
   }
 }
